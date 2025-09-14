@@ -1,0 +1,240 @@
+//index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz Game</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="container">
+    <h1>🎮 Quiz Game</h1>
+    <div id="quiz-box"></div>
+    <button id="nextBtn" class="hidden">Next</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+//styles.css
+/* General Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+}
+
+.container {
+  background: rgba(0,0,0,0.7);
+  padding: 2rem;
+  border-radius: 15px;
+  width: 400px;
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 1rem;
+}
+
+#quiz-box {
+  margin-bottom: 1.5rem;
+}
+
+.question {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.options {
+  list-style: none;
+  text-align: left;
+}
+
+.options li {
+  margin: 0.5rem 0;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: none;
+  margin-top: 0.5rem;
+}
+
+button {
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  background: #ff9800;
+  color: #fff;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: #e68900;
+}
+
+.hidden {
+  display: none;
+}
+
+.result {
+  font-size: 1.3rem;
+  margin-top: 1rem;
+}
+
+
+//script.js
+const quizData = [
+  {
+    type: "single",
+    question: "Which language is used for web apps?",
+    options: ["Python", "Java", "JavaScript", "C++"],
+    correct: "JavaScript"
+  },
+  {
+    type: "multi",
+    question: "Select all JavaScript frameworks/libraries:",
+    options: ["React", "Angular", "Vue", "Django"],
+    correct: ["React", "Angular", "Vue"]
+  },
+  {
+    type: "fill",
+    question: "Fill in the blank: CSS stands for ______ Style Sheets.",
+    correct: "Cascading"
+  }
+];
+
+let currentQ = 0;
+let score = 0;
+
+const quizBox = document.getElementById("quiz-box");
+const nextBtn = document.getElementById("nextBtn");
+
+function loadQuestion() {
+  nextBtn.classList.add("hidden");
+  const q = quizData[currentQ];
+  quizBox.innerHTML = `
+    <div class="question">${q.question}</div>
+  `;
+
+  if (q.type === "single") {
+    const ul = document.createElement("ul");
+    ul.classList.add("options");
+    q.options.forEach(opt => {
+      ul.innerHTML += `
+        <li>
+          <label>
+            <input type="radio" name="answer" value="${opt}"/> ${opt}
+          </label>
+        </li>
+      `;
+    });
+    quizBox.appendChild(ul);
+  }
+
+  if (q.type === "multi") {
+    const ul = document.createElement("ul");
+    ul.classList.add("options");
+    q.options.forEach(opt => {
+      ul.innerHTML += `
+        <li>
+          <label>
+            <input type="checkbox" name="answer" value="${opt}"/> ${opt}
+          </label>
+        </li>
+      `;
+    });
+    quizBox.appendChild(ul);
+  }
+
+  if (q.type === "fill") {
+    quizBox.innerHTML += `
+      <input type="text" id="fillAnswer" placeholder="Type your answer here"/>
+    `;
+  }
+
+  const confirmBtn = document.createElement("button");
+  confirmBtn.textContent = "Submit Answer";
+  confirmBtn.addEventListener("click", checkAnswer);
+  quizBox.appendChild(confirmBtn);
+}
+
+function checkAnswer() {
+  const q = quizData[currentQ];
+  let isCorrect = false;
+
+  if (q.type === "single") {
+    const selected = document.querySelector("input[name='answer']:checked");
+    if (selected && selected.value === q.correct) {
+      isCorrect = true;
+    }
+  }
+
+  if (q.type === "multi") {
+    const selected = [...document.querySelectorAll("input[name='answer']:checked")].map(
+      el => el.value
+    );
+    if (
+      selected.length === q.correct.length &&
+      selected.every(val => q.correct.includes(val))
+    ) {
+      isCorrect = true;
+    }
+  }
+
+  if (q.type === "fill") {
+    const userAns = document.getElementById("fillAnswer").value.trim();
+    if (userAns.toLowerCase() === q.correct.toLowerCase()) {
+      isCorrect = true;
+    }
+  }
+
+  if (isCorrect) {
+    score++;
+  }
+
+  nextBtn.classList.remove("hidden");
+  quizBox.innerHTML += `<div class="result">${isCorrect ? "✅ Correct!" : "❌ Wrong!"}</div>`;
+}
+
+nextBtn.addEventListener("click", () => {
+  currentQ++;
+  if (currentQ < quizData.length) {
+    loadQuestion();
+  } else {
+    showScore();
+  }
+});
+
+function showScore() {
+  quizBox.innerHTML = `
+    <h2>Your Score: ${score} / ${quizData.length}</h2>
+    <button onclick="restartQuiz()">Restart Quiz</button>
+  `;
+  nextBtn.classList.add("hidden");
+}
+
+function restartQuiz() {
+  currentQ = 0;
+  score = 0;
+  loadQuestion();
+}
+
+loadQuestion();
